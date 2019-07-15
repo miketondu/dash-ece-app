@@ -24,7 +24,7 @@ numpy==1.15.4
 pandas==0.24.0
 plotly==3.10.0
 pyrsistent==0.15.3
-python-dateutil==1.5
+python-dateutil==2.5
 pytz==2019.1
 PyYAML==5.1.1
 requests==2.22.0
