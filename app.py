@@ -1,20 +1,25 @@
 # DASH APP - ECE PARAGUAY
 
+# Autor: Michael A. Tondu
+
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objs as go
 import dash_table
+import plotly
 
 import pandas as pd
 import numpy as np
+import io 
+import flask as flask
 
 ##################################################
 # Data Manipulation
 ##################################################
 
 # Loading and cleaning data
-df = pd.read_csv('ECE.csv')
+df = pd.read_csv('ECE_copy.csv')
 
 # Estandarizando el tipo de los datos
 for i in df.columns:
@@ -146,8 +151,8 @@ di9={1.0: 'Solo',
 df['A16'] = df['A16'].map(di9)
 
 #10 Edades quinquenales
-di10 = {1.0: '0 años - 4 años',
- 2.0: '5 años - 9 años',
+di10 = {1.0: '0 años - 04 años',
+ 2.0: '05 años - 09 años',
  3.0: '10 años - 14 años',
  4.0: '15 años - 19 años',
  5.0: '20 años - 24 años',
@@ -162,22 +167,20 @@ di10 = {1.0: '0 años - 4 años',
 df['EDAD_QUIN'] = df['EDAD_QUIN'].map(di10)
 
 #11 Actividad económica (DESAGREGADA) PEAD
-di11={1.0: 'Ocupados (Excluyendo Subocupación Visible + Invisible)',
+di11={1.0: 'Ocupados (Sin Subocupación Visible + Invisible)',
  2.0: 'Desocupados de 2ª ó más veces',
  3.0: 'Inactivos (Excluyendo Desempleo Oculto)',
  4.0: 'Subocup. Visible',
  5.0: 'Subocup. Invisible',
  6.0: 'Desempleo Oculto',
- 7.0: 'Desocupados de 1ª vez',
- 0.0: np.nan}
+ 7.0: 'Desocupados de 1ª vez'}
 
 df['PEAD'] = df['PEAD'].map(di11)
 
 #12 Actividad económica (AGRUPADA) PEAA
 di12={1.0: 'Ocupados',
  2.0: 'Desocupados',
- 3.0: 'Inactivos',
- 0.0: np.nan}
+ 3.0: 'Inactivos'}
 
 df['PEAA'] = df['PEAA'].map(di12)
 
@@ -230,7 +233,7 @@ di16 = {1.0: 'Gana poco',
 
 df['D02'] = df['D02'].map(di16)
 
-#17 País de orígen de ingresos del exterior E01GC
+#17 País de orígen de remesas E01GC
 di17 = {1.0: 'Argentina',
  2.0: 'Brasil',
  3.0: 'EE.UU.',
@@ -238,16 +241,181 @@ di17 = {1.0: 'Argentina',
  9.0: 'Otro'}
 
 df['E01GC'] = df['E01GC'].map(di17)
+###########
+#18 Relacion de parentesco con el jefe de hogar
+di18 = {1: 'Jefe/a',
+ 2: 'Esposo/a /compañero/a',
+ 3: 'Hijo/a',
+ 4: 'Hijastro/a',
+ 5: 'Nieto/a',
+ 6: 'Yerno/Nuera',
+ 7: 'Padre/Madre',
+ 8: 'Suegro/a',
+ 9: 'Otro pariente',
+ 10: 'No pariente',
+ 11: 'Personal doméstico o su familia'}
+df['P02'] = df['P02'].map(di18)
+
+#19 sexo
+di19 = {1.0: 'Varón',
+ 6.0: 'Mujer'}
+#df['P04'] = df['P04'].map(di19)
+
+#20 Estado Civil
+di20 = {1.0: 'Casado/a',
+ 2.0: 'Unido/a',
+ 3.0: 'Separado/a',
+ 4.0: 'Viudo/a',
+ 5.0: 'Soltero/a',
+ 6.0: 'Divorciado/a',
+ 9.0: 'NR'}
+df['P06'] = df['P06'].map(di20)
+
+#21 Sabe leer y escribir?
+di21 = {1.0: 'Sí',
+ 6.0: 'No'}
+df['ED02'] = df['ED02'].map(di21)
+
+#22 Asiste o asistió alguna vez a una institución de enseñanza formal ?
+di22 = {1.0: 'Sí',
+ 6.0: 'No'}
+df['ED03'] = df['ED03'].map(di22)
+
+#23 Asiste  actualmente a una institución de enseñanza ?
+di23 = {1: 'Sí, Educ. Inicial',
+ 2: 'Sí, Educ. Escolar Básica',
+ 3: 'Sí, Educación Media Científica',
+ 4: 'Sí, Educación Media Técnica',
+ 5: 'Sí, Bachillerato a Distancia',
+ 6: 'Sí, Educ. Básica Bilingüe de Jóvenes y Adultos',
+ 7: 'Sí, Educación Media a Distancia para Jóvenes y Adultos',
+ 8: 'Sí, Educación Media Alternativa de Jóvenes y Adultos',
+ 9: 'Sí, Formación Profesional no Bachillerato de la Media',
+ 10: 'Sí, Programas de Alfebeticación',
+ 11: 'Sí, Educ. Especial',
+ 12: 'Sí, Grado Especial / Programas especiales',
+ 13: 'Sí, Técnica Superior',
+ 14: 'Sí, Formación Docente',
+ 15: 'Sí, Profesionalización Docente',
+ 16: 'Sí, Formación Militar / Policial',
+ 17: 'Sí, Superior Universitario',
+ 18: 'Sí, Post Superior no Universitario',
+ 19: 'Sí, Post Superior Universitario',
+ 20: 'No asiste '}
+df['ED05'] = df['ED05'].map(di23)
+
+#24 La institución o programa donde asiste es del sector
+di24 = {1.0: 'Pública ',
+ 2.0: 'Privada ',
+ 3.0: 'Privada Subvencionada ',
+ 9.0: 'NR'}
+df['ED06'] = df['ED06'].map(di24)
+
+#25 Por qué no asiste o dejó de asistir a una institucion de enseñanza?
+di25 = {1.0: 'Sin recursos en el hogar',
+ 2.0: 'Necesidad de trabajar',
+ 3.0: 'Muy costosos los materiales y matriculas',
+ 4.0: 'No tiene edad adecuada ',
+ 5.0: 'Considera que terminó los estudios',
+ 6.0: 'No existe institución cercana',
+ 7.0: 'Institución cercana muy mala',
+ 8.0: 'El centro educativo cerró',
+ 9.0: 'El docente no asiste con regularidad ',
+ 10.0: 'Institución no ofrece escolaridad completa',
+ 11.0: 'Requiere educación especial',
+ 13.0: 'Por enfermedad',
+ 14.0: 'Realiza labores en el hogar',
+ 15.0: 'Motivos familiares',
+ 16.0: 'No quiere estudiar',
+ 17.0: 'Asiste a enseñanza vocacional',
+ 18.0: 'Servicio militar',
+ 19.0: 'Otra razón'}
+df['ED07'] = df['ED07'].map(di25)
+
+#26 La persona responde por sí misma ?
+di26 = {1.0: 'Sí',
+ 6.0: 'No'}
+df['A01'] = df['A01'].map(di26)
+
+#27 Ha realizado algun trabajo la semana pasada?  ##### (Utilizamos esta variable para calcular poblacion activa)
+#df['A02'] = df['A02'].map(di26)
+
+#28 Tiene algun trabajo aunque no lo haya realizado la anterior semana?
+df['A03'] = df['A03'].map(di26)
+
+#29 Hizo algo para conseguir trabajo en la semana pasada ?
+df['A04'] = df['A04'].map(di26)
+
+#30  Hizo algo para conseguir trabajo en el mes pasado ?
+df['A05'] = df['A05'].map(di26)
+
+#31 Razón por la que no habría podido aceptar una oferta de trabajo?
+di31= {1.0: 'No quiere trabajar más',
+ 2.0: 'Es demasiado joven',
+ 3.0: 'Se dedica exclusivamente a las labores del hogar',
+ 4.0: 'Es estudiante',
+ 5.0: 'Estuvo enfermo',
+ 6.0: 'Es anciano o discapacitado',
+ 7.0: 'Es rentista',
+ 8.0: 'Es jubilado',
+ 9.0: 'Es pensionado',
+ 10.0: 'Motivos familiares',
+ 11.0: 'Otra razón ',
+ 99.0: 'NR'}
+df['A11'] = df['A11'].map(di31)
+
+#31 Ha trabajado anteriormente ?
+df['A12'] = df['A12'].map(di26)
+
+#32 Ocupación en anterior trabajo
+df['RECA13'] = df['RECA13'].map(di5)
+df['RECC01'] = df['RECC01'].map(di5)
+
+#33 Sector económico de anterior trabajo
+df['RECA14'] = df['RECA14'].map(di2) 
+df['RECC02'] = df['RECC02'].map(di2)
+
+#34 Razón por la que no trabajó el número habitual de horas en la semana pasada?
+di34 = {1.0: 'Disminución de  trabajo',
+ 2.0: 'Falta de materiales',
+ 3.0: 'Reparaciones en la planta, máquina, vehículo',
+ 4.0: 'Empleo nuevo que empezó dentro de la semana',
+ 5.0: 'Empleo que terminó dentro de la semana',
+ 6.0: 'Inclemencia del tiempo',
+ 7.0: 'Gestiones particulares, viajes, (independientes)',
+ 8.0: 'Vacaciones, permiso, huelga (asalariados)',
+ 9.0: 'Enfermedad',
+ 10.0: 'Demasiado ocupado en tareas del hogar, estudio, etc.',
+ 11.0: 'Trabaja a tiempo completo sólo en período de mayor actividad',
+ 12.0: 'Día feriado, fiesta',
+ 13.0: 'Cualquier otra razón',
+ 99.0: 'NR'}
+df['B05'] = df['B05'].map(di34)
+
+#35 Aporta a una caja de jubilación por este trabajo ?
+df['B10'] = df['B10'].map(di26)
+
+#36 Categoría o posición en su actual ocupación ?
+df['B11'] = df['B11'].map(di8)
+
+#37 Durante la semana pasada, buscó algún otro trabajo para cambiar o adicionar al que ya tiene ?
+df['D03'] = df['D03'].map(di26)
+
+#38 Durente la semana pasada, estuvo disponible para trabajar más horas ?
+df['D04'] = df['D04'].map(di26)
+
+#39 Tuvo trabajo secundario en la semana pasada?
+df['B23'] = df['B23'].map(di26)
 
 
 
-
+  
     
 # List of variables for second dropdown
-drop_dict = {'RECB01':'Ocupación',
-             'RECB02':'Sector Económico' ,
-             'ED01':'Idioma Principal en Casa',
-             'AÑOESTU':'Nivel o Curso más Alto Aprobado',
+drop_dict = {'RECB01':'Ocupación principal',
+             'RECB02':'Sector económico de ocupacion principal' ,
+             'ED01':'Idioma principal en casa',
+             'AÑOESTU':'Nivel o curso más alto aprobado',
              'A06' : '¿Qué hizo para conseguir trabajo en el último mes?',
              'A09': 'Razón por la qué no buscó trabajo el último mes', 
              'A15':'Categoría o posición que tenía en su última ocupación',
@@ -261,6 +429,29 @@ drop_dict = {'RECB01':'Ocupación',
              'PEAD':  'Actividad económica (desagregada)',
              'PEAA': 'Actividad económica (agrupada)',
              'trimestre': 'Trimestre',
+             'E01GC' : 'País de orígen de remesas ',
+             'P02' : 'Relacion de parentesco con el jefe de hogar',
+             'P06': 'Estado Civil',
+             'ED02': '¿Sabe leer y escribir?',
+             'ED03': '¿Asiste o asistió a una institución de enseñanza formal?',
+             'ED05': 'Tipo de institución de enseñanza actual',
+             'ED06': 'Sector de la institución o programa de enseñanza',
+             'ED07': 'Razon por la que no asiste una institucion de enseñanza',
+             'A01': '¿La persona responde por sí misma ?',
+             # 'A02': '¿Ha realizado algun trabajo la semana pasada?',
+             'A03': '¿Tiene algun trabajo aunque no lo haya realizado la anterior semana?',
+             'A04': '¿Hizo algo para conseguir trabajo en la semana pasada?',
+             'A05': '¿Hizo algo para conseguir trabajo en el mes pasado?',
+             'A11': 'Razón por la que no habría podido aceptar una oferta de trabajo',
+             'A12': '¿Ha trabajado anteriormente?',
+             'RECA13' : 'Ocupación en anterior trabajo',
+             'RECA14':'Sector económico de anterior trabajo',
+             'B05': 'Razón por la que no trabajó las horas habituales',
+             'B10':'¿Aporta a una caja de jubilación?',
+             'B11': 'Categoría o posición en su actual ocupación',
+             'D03': '¿Buscó algun trabajo adicional la semana pasada?',
+             'D04': '¿Estuvo disponible para trabajar más horas la semana pasada?',
+             'B23': '¿Tuvo un trabajo secundario en la semana pasada?',
              
             }
 
@@ -298,13 +489,6 @@ def generate_pv(frame, variable):
     
     return pv.iloc[:,2:]
 
-def generate_gb(frame, variable):
-    pv = frame.groupby([var,'trimestre'])[['trimestre']].count()
-    pv = pv.unstack(level=1)
-    pv = (100. * pv/ pv.sum()).round(1).astype(str) + '%'
-    pv.insert(loc=0, column='RECB02', value=pv.index)
-    
-    return pv
 
     
 
@@ -314,8 +498,11 @@ def generate_gb(frame, variable):
 app = dash.Dash()
 
 app.css.append_css({
-    "external_url": "https://codepen.io/chriddyp/pen/bWLwgP.css"
+    "external_url": "https://codepen.io/chriddyp/pen/bWLwgP.css",
+    
 })
+server = app.server 
+
 
 colors = {
     'background': '#0C99F4',
@@ -324,7 +511,7 @@ colors = {
 }
 
 
-
+#FFFFFF
 
 ##################################################
 # Dashboard Layout / View
@@ -333,13 +520,18 @@ colors = {
 
 app.layout = html.Div([  
     
-  
+
     #Page Header
-    html.H1("Encuesta Continua de Empleo Paraguay", style={'margin-left':80,
-                                                           'margin-right':10,
+    html.H1("Encuesta Continua de Empleo Paraguay", style={'margin-left':40,
+                                                           'margin-right':40,
                                                            'font-family': 'Helvetica',
                                                            "margin-top": 25, 
-                                                           "margin-bottom": 25},),
+                                                           "margin-bottom": 5,
+                                                          'backgroundColor':colors['background']},),
+    
+
+    html.A("Descargar Datos Transformados", href="/download_excel/",
+          style={'text-align': 'right', 'margin-left':10} , className= "eleven columns"),
          
     # Dropdown Grid
 
@@ -357,7 +549,8 @@ app.layout = html.Div([
                 html.Div(dcc.Dropdown(id="drop-1",
                         options=([{'label': year, 'value': year } for year in df['year'].unique()]),
                         value= None,
-                        className='eight columns',  style={'margin-left':10,'margin-right':10}))
+                        className='eight columns',  style={'margin-left':10,'margin-right':10,
+                                                          "margin-bottom": 15}))
                     ]),
       
         
@@ -372,7 +565,8 @@ app.layout = html.Div([
                 html.Div(dcc.Dropdown(id="drop-2",
                         options = ([{'label': label, 'value': var} for var,label in drop_dict.items()]),
                         value= 'EDAD_QUIN',
-                        className='eight columns',  style={'margin-left':10,'margin-right':10}))
+                        className='eight columns',  style={'margin-left':10,'margin-right':10,
+                                                          "margin-bottom": 15}))
                     ]),
             
         ], className='six columns'),
@@ -388,10 +582,12 @@ app.layout = html.Div([
         # Graficos izquierdos 
         html.Div([
             # Graph1
-            dcc.Graph(id='funnel-graph-1', style={'height':'500px'}),
+            dcc.Graph(id='funnel-graph-1', style={'height':'500px'},
+                      config={'toImageButtonOptions': {'width': 1500, 'height': 1000}}),
             
             # Graph2
-            dcc.Graph(id='funnel-graph-2', style={'height': '700px'})
+            dcc.Graph(id='funnel-graph-2', style={'height': '700px'},
+                      config={'toImageButtonOptions': {'width': 1500, 'height': 1000}})
             
             
         ], className='six columns'),
@@ -401,7 +597,8 @@ app.layout = html.Div([
         html.Div([
 
             # Graph3
-            dcc.Graph(id='funnel-graph-3', style={'height': '700px'}),
+            dcc.Graph(id='funnel-graph-3', style={'height': '700px'},
+                      config={'toImageButtonOptions': {'width': 1500, 'height': 1000}}),
             
             # summary table
             html.Table(id='variable-table-1',style={'height': '500px',
@@ -413,28 +610,22 @@ app.layout = html.Div([
         ], className='six columns')
        
     ] , style={'backgroundColor':colors['plots']}, className = 'twelve columns'),
+   
     # Third grid
     html.Div([
         
-        # Radio
- #       html.Div([
- #           
-  #          dcc.RadioItems(id='radio-item',
-  #              options=[
-   #                     {'label': 'Stack', 'value': 'stack'},
-    #                    {'label': 'Grouped', 'value': 'group'},
-     #               ],
-      #              value='Grouped' ) 
-       # ], className = 'one columns'),
-        
           # Graph 5
         html.Div([
-            dcc.Graph(id='funnel-graph-5', style={'height': '600px'}) ,      
+            dcc.Graph(id='funnel-graph-4', style={'height': '600px'},
+                      config={'toImageButtonOptions': {'width': 1500, 'height': 1000}}) ,
         ], className='twelve columns'),
+       # html.Div([
+       #     dcc.Graph(id='funnel-graph-5', style={'height': '600px'}) ,
+       # ], className='six columns'),
 
     ], className = 'twelve columns'),
     
-],  style={'backgroundColor': colors['background']})    # Final Structure parenthesis
+])    # Final Structure parenthesis
     
     
 
@@ -484,6 +675,7 @@ def update_graph_1(year):
         title = year
         
     return {
+            
         'data': [trace1, trace2, trace3],
         'layout':
         go.Layout(
@@ -494,7 +686,7 @@ def update_graph_1(year):
                             "size": 24,
                             },
                   },
-            )
+            ), 
     }
 # 2. Function to update second graph PIE chart
 @app.callback(
@@ -617,59 +809,15 @@ def update_graph_3(var, year):
   
     
 
-# 5. Function for fourth graph
-#@app.callback(
-#    dash.dependencies.Output('funnel-graph-4', 'figure'),
-#    [dash.dependencies.Input('drop-1', 'value')])
-
-def update_graph_4(year):
-    
-    if year == None:
-        frame = df.copy()
-    else:
-        frame = df[df['year'].isin([year])]
-    traces = []
-    for i in frame.P04.unique():
-        
-        df_by_gender = frame[frame['P04'] == i]
-        
-        traces.append(go.Scatter(
-            x=df_by_gender['HORABH'],
-            y=df_by_gender['E01T'],
-            text=df_by_gender['P04'],
-            mode='markers',
-            opacity=0.7,
-            marker={
-                'size': 15,
-                'line': {'width': 0.5, 'color': 'white'}
-            },
-            name=str(i)
-        ))
-
-    return {
-        'data': traces,
-        'layout': go.Layout(
-            plot_bgcolor=colors['plots'],
-            paper_bgcolor= colors['plots'],
-            
-            xaxis={'type': 'log', 'title': 'Horas Trabajadas Habituales'},
-            yaxis={'title': 'Salario Mes Pasado'},
-            margin={'l': 50, 'b': 100, 't': 10, 'r': 10},
-            legend={'x': 0, 'y': 1},
-            hovermode='closest'
-        )
-    }
-
-
-# 6. Function for fifth graph
+#5. Function for fourth graph
 @app.callback(
-    dash.dependencies.Output('funnel-graph-5', 'figure'),
+    dash.dependencies.Output('funnel-graph-4', 'figure'),
         [dash.dependencies.Input('drop-2', 'value'),
         dash.dependencies.Input('drop-1', 'value')
         ])
 
 
-def update_graph_5(var,year):
+def update_graph_4(var,year):
     
     if year == None:
         frame = df.copy()
@@ -698,17 +846,18 @@ def update_graph_5(var,year):
    
     # Title
     if year == None:
-        title= drop_dict[var] + (' - Ingreso Total Promedio ₲ - Todos los Años')
+        title= drop_dict[var] + (' - Ingreso Mensual Promedio ₲ - Todos los Años')
     else:
-        title= drop_dict[var] + (' - Ingreso Total Promedio ₲ - {} '.format(year) )
+        title= drop_dict[var] + (' - Ingreso Mensual Promedio ₲ - {} '.format(year) )
         
     # Radio
 
-        
+    
+    
     return {
         'data': traces,
         'layout':
-        go.Layout(
+        go.Layout( 
             plot_bgcolor=colors['plots'],
             paper_bgcolor= colors['plots'],
             title={"text": title,
@@ -719,10 +868,66 @@ def update_graph_5(var,year):
             barmode= 'group')
     }
 
+    
+# 6. Function for fifth graph
+#@app.callback(
+#    dash.dependencies.Output('funnel-graph-5', 'figure'),
+#    [dash.dependencies.Input('drop-1', 'value')])
+
+def update_graph_5(year):
+    
+    if year == None:
+        frame = df.copy()
+    else:
+        frame = df[df['year'].isin([year])]
+    traces = []
+    for i in frame.P04.unique():
+        
+        df_by_gender = frame[frame['P04'] == i]
+        
+        traces.append(go.Scatter(
+            x=df_by_gender['HORABH'],
+            y=df_by_gender['E01T'],
+            text=df_by_gender['P04'],
+            mode='markers',
+            opacity=0.7,
+            marker={
+                'size': 15,
+                'line': {'width': 0.5, 'color': 'white'}
+            },
+            name=str(i)
+        ))
+
+    return {
+        'data': traces,
+        'layout': go.Layout(
+            plot_bgcolor=colors['plots'],
+            paper_bgcolor= colors['plots'],
+            xaxis={'type': 'log', 'title': 'Horas Trabajadas Habituales'},
+            yaxis={'title': 'Salario Mes Pasado'},
+            margin={'l': 50, 'b': 100, 't': 10, 'r': 10},
+            legend={'x': 0, 'y': 1},
+            hovermode='closest'),
+        
+    }
 
 
 
+# DOWNLOAD CSV
 
+
+@app.server.route('/download_excel/')
+def download_csv():
+    #Convert DF
+    str_io = io.StringIO()
+    df.to_csv(str_io)
+    mem = io.BytesIO()
+    mem.write(str_io.getvalue().encode('utf-8'))
+    mem.seek(0)
+    return flask.send_file(mem,
+                       mimetype='text/csv',
+                       attachment_filename='encuesta_limpia.csv',
+                       as_attachment=True)
 
 if __name__ == '__main__':
     app.run_server(debug=True)
