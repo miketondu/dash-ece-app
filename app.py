@@ -13,13 +13,26 @@ import pandas as pd
 import numpy as np
 import io 
 import flask as flask
+import pymysql
+import psycopg2
+
 
 ##################################################
 # Data Manipulation
 ##################################################
 
 # Loading and cleaning data
-df = pd.read_csv('ECE_copy.csv')
+#df = pd.read_csv('D:\dash-ece-app-master\ECE_copy.csv')
+
+
+host="ec2-174-129-227-80.compute-1.amazonaws.com"
+db="d6kqslcuso8lr"
+us="bnwycizeyrtlgn"
+pwd="8d207872efa476ea7e3f9ae0bc23045fe114ae3ac4b67956b7e3d754a5632d3e"
+db = psycopg2.connect(host=host,database=db, user=us, password=pwd , port=5432)
+query = "SELECT * FROM data;"
+
+df = pd.read_sql(query, db)
 
 # Estandarizando el tipo de los datos
 for i in df.columns:
@@ -494,13 +507,14 @@ def generate_pv(frame, variable):
 
 
 
-
-app = dash.Dash()
-
+external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+app = dash.Dash(__name__,external_stylesheets =external_stylesheets )
+'''
 app.css.append_css({
     "external_url": "https://codepen.io/chriddyp/pen/bWLwgP.css",
     
 })
+'''
 server = app.server 
 
 
