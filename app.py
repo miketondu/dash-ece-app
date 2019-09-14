@@ -105,6 +105,8 @@ colors = {
     'text': '#7FDBFF'
 }
 
+server = app.server 
+
 
 ##################################################
 # Dashboard Layout / View
