@@ -1,11 +1,21 @@
 import pandas as pd
 import numpy as np
-
-
+import psycopg2
 def load_data():
 
-    df = pd.read_csv('ECE_copy.csv',low_memory=False)
+    #df = pd.read_csv('D:\dash-ece-app-master\ECE_copy.csv',low_memory=False)
+    
+    host="ec2-174-129-227-80.compute-1.amazonaws.com"
+    db="d6kqslcuso8lr"
+    us="bnwycizeyrtlgn"
+    pwd="8d207872efa476ea7e3f9ae0bc23045fe114ae3ac4b67956b7e3d754a5632d3e"
+    db = psycopg2.connect(host=host,database=db, user=us, password=pwd , port=5432)
 
+
+    query = "SELECT * FROM data;"
+
+    df = pd.read_sql(query, db)
+    
     # Estandarizando el tipo de los datos
     for i in df.columns:
         df[i] = pd.to_numeric(df[i], errors='coerce')

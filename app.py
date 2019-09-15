@@ -17,9 +17,14 @@ import io
 import flask as flask
 
 
-df= load_data()
-app = dash.Dash(__name__)
 
+
+external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+app = dash.Dash(__name__,external_stylesheets =external_stylesheets )
+
+server = app.server 
+
+df=''
 
 
 # Function to generate table
@@ -105,13 +110,6 @@ colors = {
     'text': '#7FDBFF'
 }
 
-server = app.server 
-
-
-##################################################
-# Dashboard Layout / View
-##################################################
-
 
 array=[a for a in range(2010,2017)]
 app.layout = html.Div([
@@ -172,8 +170,9 @@ app.layout = html.Div([
         ],   className='twleve columns'),
 
 
-    dcc.Loading(id="loading-1", children=[html.Div(id="loading-output-1")], type="default"),
+   
     dcc.Loading(
+
                     
                     children=[
     # Closes dropdown grid
@@ -232,11 +231,16 @@ app.layout = html.Div([
 
 
 
-
-##################################################
-# Callbacks
-##################################################
-
+df=''
+'''
+@app.callback(Output("output-2", "children"), [Input("drop-1", "value")])
+def see(value):
+    global df
+    try:
+        if not df:df=load_data()
+    except:pass
+    return 'Done'
+'''
 # 1. Function to update first graph
 @app.callback(
     dash.dependencies.Output('funnel-graph-1', 'figure'),
@@ -244,13 +248,14 @@ app.layout = html.Div([
 
 def update_graph_1(year):
     global df
+    
     try:
         if not df:df=load_data()
     except:pass
     if year == None:
-        frame = df.copy()
+            frame = df.copy()
     else:
-        frame = df[df['year'].isin([year])]
+            frame = df[df['year'].isin([year])]
     
     variable = 'EDAD_QUIN'   
     
@@ -301,6 +306,7 @@ def update_graph_1(year):
     dash.dependencies.Input('drop-1', 'value')] )
 
 def update_graph_2(var, year):
+    
     global df
     try:
         if not df:df=load_data()
