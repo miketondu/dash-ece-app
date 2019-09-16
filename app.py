@@ -111,7 +111,7 @@ colors = {
 }
 
 
-array=[a for a in range(2010,2017)]
+array=[a for a in range(2010,2018)]
 app.layout = html.Div([
     
 
