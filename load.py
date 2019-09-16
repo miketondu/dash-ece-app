@@ -2,8 +2,9 @@ import pandas as pd
 import numpy as np
 import psycopg2
 def load_data():
-
-    #df = pd.read_csv('D:\dash-ece-app-master\ECE_copy.csv',low_memory=False)
+    
+    # Local .csv
+    df = pd.read_csv('ECE_copy.csv',low_memory=False)
     
     host="ec2-174-129-227-80.compute-1.amazonaws.com"
     db="d6kqslcuso8lr"
@@ -14,7 +15,7 @@ def load_data():
 
     query = "SELECT * FROM data;"
 
-    df = pd.read_sql(query, db)
+    #df = pd.read_sql(query, db)
     
     # Estandarizando el tipo de los datos
     for i in df.columns:
